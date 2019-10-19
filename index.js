@@ -87,7 +87,10 @@ const UpcomingMovieHandler = {
           if(i<2)outputSpeech+=', ';
           i++;
         }
+        SessionAttributes.data = data;
       });
+    outputSpeech += "Would you like to here more?";
+    SessionAttributes.count = 4;
     SessionAttributes.lastStatement = outputSpeech;
     return handlerInput.responseBuilder
       .speak(outputSpeech)
@@ -128,6 +131,37 @@ const MovieDescriptionHandler = {
   },
 };
 
+const YesHandler = {
+  canHandle(handlerInput) {
+    const request = handlerInput.requestEnvelope.request;
+    return request.type === 'IntentRequest' && (request.intent.name === 'AMAZON.YesIntent');
+  },
+  handle(handlerInput) {
+    var outputSpeech;
+    var SessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+    var i=SessionAttributes.count;
+    var lim=i+3;
+    outputSpeech = "Some other movies are "  + SessionAttributes.data.results[i].original_title;
+    i++;
+        while (i<lim)
+        {
+          if (i==(lim-1))
+            outputSpeech +=  " and " + SessionAttributes.data.results[i].original_title + ".";
+          else
+            outputSpeech +=  " , " + SessionAttributes.data.results[i].original_title;
+          i++;
+        }
+    outputSpeech += "Would you like to here more?";
+    
+    SessionAttributes.count += 3;
+    SessionAttributes.lastStatement = outputSpeech;
+    return handlerInput.responseBuilder
+      .speak(outputSpeech)
+      .withShouldEndSession(false)
+      .getResponse();
+  },
+};
+
 const MovieSuggestIntentHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -159,6 +193,22 @@ const MovieSuggestIntentHandler = {
       URL+=`&primary_release_year=${releaseYear}`;
     }
 
+    if(handlerInput.requestEnvelope.request.intent.slots.Actor.value){
+      var actorName=handlerInput.requestEnvelope.request.intent.slots.Actor.value; // Getting actorName from the slot
+      var actorId;
+      // Building URL for API to get Actor ID
+      var URLtemp =`https://api.themoviedb.org/3/search/person?api_key=${APIKEY}`; 
+      URLtemp+=`&page=1`;
+      URLtemp+=`&language=en-US`;
+      URLtemp+=`&query=${actorName}`;
+      await getRemoteData(URLtemp)
+      .then((response) => {
+        data = JSON.parse(response);
+        actorId = data.results[0].id;
+      });
+      Url+=`&with_cast=${actorId}`;
+    }
+
     await getRemoteData(URL)
     .then((response) => {
       const data = JSON.parse(response);
@@ -173,10 +223,13 @@ const MovieSuggestIntentHandler = {
         i++;
         if(i===4)speechText+='.';
       }
+      SessionAttributes.data = data;
     })
     .catch(function(error){
       console.log(error);
     });
+    outputSpeech += "Would you like to here more?";
+    SessionAttributes.count = 4;
     sessionAttributes.lastStatement = speechText;
     return handlerInput.responseBuilder
     .speak(speechText)
@@ -230,8 +283,11 @@ const SimilarMoviesHandler = {
         i++;
         if(i===3)speechText+='.';
       }
+      SessionAttributes.data = data;
     });
-
+    outputSpeech += "Would you like to here more?";
+    SessionAttributes.count = 4;
+    });
     SessionAttributes.lastStatement = speechText;
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -340,6 +396,7 @@ exports.handler = skillBuilder
     CancelAndStopIntentHandler,
     SessionEndedRequestHandler,
     RepeatHandler,
+    YesHandler,
   )
   .addErrorHandlers(ErrorHandler)
   .lambda();

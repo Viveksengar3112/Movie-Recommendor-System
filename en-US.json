@@ -29,6 +29,14 @@
                         {
                             "name": "year",
                             "type": "AMAZON.DATE"
+                        },
+                        {
+                            "name": "actor",
+                            "type": "AMAZON.Actor"
+                        }
+                    ],
+                    "samples": [
+                        "suggest some movies by {actor}",
                         }
                     ],
                     "samples": [
