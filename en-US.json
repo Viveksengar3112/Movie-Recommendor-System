@@ -36,10 +36,21 @@
                         }
                     ],
                     "samples": [
+                        "suggest movies by {actor} from {year}",
+                        "movies by {actor}",
+                        "movies from {year} by {actor}",
+                        "{genre} movie of {actor} from {year}",
+                        "suggest {genre} movie of {actor}",
+                        "some good {genre} movie of {actor}",
+                        "some good movies of {actor}",
+                        "tell me some good movies by {actor}",
+                        "tell me some good movies of {actor}",
+                        "suggest some good movies of {actor}",
+                        "some movies of {actor}",
+                        "tell me some movies by {actor}",
+                        "tell me some movies of {actor}",
+                        "What are the best {genre} that were released in {year}",
                         "suggest some movies by {actor}",
-                        }
-                    ],
-                    "samples": [
                         "What are the best {genre} that were released {year} ",
                         "best movies from year {year}",
                         "suggest movies from {year}",
@@ -195,6 +206,7 @@
                         }
                     ],
                     "samples": [
+                        "tell me more about {movieName}",
                         "tell me the story of {movieName}",
                         "give me description of {movieName}",
                         "tell me about {movieName}"
@@ -406,6 +418,16 @@
                                 "synonyms": [
                                     "actions"
                                 ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "AMAZON.Movie",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "the sixth sense"
                             }
                         }
                     ]
