@@ -1,8 +1,8 @@
 /* eslint-disable  func-names */
 /* eslint-disable  no-console */
-
+ 
 const Alexa = require('ask-sdk-core');
-
+ 
 const genre_code = {
   '28' :'action',
   '12' :'adventure',
@@ -23,11 +23,11 @@ const genre_code = {
   '37':'western',
   '878':'science-fiction',
 };
-
+ 
 var RandomInt = (min, max) => {
 		return Math.floor(Math.random()*(max-min+1)+min);
 };
-
+ 
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
@@ -40,26 +40,26 @@ const LaunchRequestHandler = {
       .getResponse();
   },
 };
+ 
 
-var URL = 'https://api.themoviedb.org/3';
 const APIKEY = 'ed2abc139713cf83b45739d153cc15b1';
-
+ 
 var currentDate = new Date();
 var numberOfDaysToAdd = 30;
 var nextDate = new Date(currentDate.getTime()+(numberOfDaysToAdd*24*60*60*1000));
-
+ 
 var currentDay = currentDate.getDate();
 var currentMonth = currentDate.getMonth()+1;
 var currentYear = currentDate.getFullYear();
-
+ 
 var nextDay = nextDate.getDate();
 var nextMonth = nextDate.getMonth()+1;
 var nextYear = nextDate.getFullYear();
-
+ 
 var currentFormattedDate = currentYear + '-'+ currentMonth + '-'+ currentDay;
 var nextFormattedDate = nextYear + '-'+ nextMonth + '-'+ nextDay;
-
-
+ 
+ 
 const UpcomingMovieHandler = {
   canHandle(handlerInput) {
     return (handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -68,6 +68,7 @@ const UpcomingMovieHandler = {
   async handle(handlerInput) {
     var outputSpeech = 'Here are the some upcoming movies: ';
     var SessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+    var URL = 'https://api.themoviedb.org/3';
     URL+=`/discover/movie?api_key=${APIKEY}`;
     URL+=`&page=1`;
     URL+=`&with_original_language=en`;
@@ -98,7 +99,7 @@ const UpcomingMovieHandler = {
       .getResponse();
   },
 };
-
+ 
 const MovieDescriptionHandler = {
   canHandle(handlerInput) {
     return (handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -108,7 +109,7 @@ const MovieDescriptionHandler = {
     var movieName=handlerInput.requestEnvelope.request.intent.slots.movieName.value; // Getting movieName from the slot
     var outputSpeech;
     var SessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-    
+    var URL = 'https://api.themoviedb.org/3';
     // Building URL for API
     URL+=`/search/movie?api_key=${APIKEY}`; 
     URL+=`&page=1`;
@@ -130,7 +131,7 @@ const MovieDescriptionHandler = {
       .getResponse();
   },
 };
-
+ 
 const YesHandler = {
   canHandle(handlerInput) {
     const request = handlerInput.requestEnvelope.request;
@@ -141,17 +142,17 @@ const YesHandler = {
     var SessionAttributes = handlerInput.attributesManager.getSessionAttributes();
     var i=SessionAttributes.count;
     var lim=i+3;
-    outputSpeech = "Some other movies are "  + SessionAttributes.data.results[i].original_title;
+    outputSpeech = "Some other movies are: "  + SessionAttributes.data.results[i].original_title;
     i++;
         while (i<lim)
         {
           if (i==(lim-1))
-            outputSpeech +=  " and " + SessionAttributes.data.results[i].original_title + ".";
+            outputSpeech +=  ", and " + SessionAttributes.data.results[i].original_title + ".";
           else
-            outputSpeech +=  " , " + SessionAttributes.data.results[i].original_title;
+            outputSpeech +=  ", " + SessionAttributes.data.results[i].original_title;
           i++;
         }
-    outputSpeech += "Would you like to here more?";
+    outputSpeech += " Would you like to hear more?";
     
     SessionAttributes.count += 3;
     SessionAttributes.lastStatement = outputSpeech;
@@ -161,7 +162,7 @@ const YesHandler = {
       .getResponse();
   },
 };
-
+ 
 const MovieSuggestIntentHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -169,9 +170,11 @@ const MovieSuggestIntentHandler = {
   },
   async handle(handlerInput){
     let speechText = `Here are your movie recommendations: `;
+    var URL = 'https://api.themoviedb.org/3';
     URL+=`/discover/movie?api_key=${APIKEY}`;
     URL+=`&page=1`;
     URL+=`&with_original_language=en`;
+    const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
     if(handlerInput.requestEnvelope.request.intent.slots.genre.value){
       let genreSlot = handlerInput.requestEnvelope.request.intent.slots['genre'].value;
       let genreId = handlerInput.requestEnvelope.request.intent.slots.genre.resolutions.resolutionsPerAuthority[0].values[0].value.id;
@@ -186,15 +189,14 @@ const MovieSuggestIntentHandler = {
         URL+=`&with_genres=${choice}`;
       }
     }
-    const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
     if(handlerInput.requestEnvelope.request.intent.slots.year.value){
       var releaseYear = handlerInput.requestEnvelope.request.intent.slots.year.value;
       URL+=`&primary_release_year=${releaseYear}`;
     }
 
-    if(handlerInput.requestEnvelope.request.intent.slots.Actor.value){
-      var actorName=handlerInput.requestEnvelope.request.intent.slots.Actor.value; // Getting actorName from the slot
+    if(handlerInput.requestEnvelope.request.intent.slots.actor.value){
+      var actorName=handlerInput.requestEnvelope.request.intent.slots.actor.value; // Getting actorName from the slot
       var actorId;
       // Building URL for API to get Actor ID
       var URLtemp =`https://api.themoviedb.org/3/search/person?api_key=${APIKEY}`; 
@@ -203,19 +205,18 @@ const MovieSuggestIntentHandler = {
       URLtemp+=`&query=${actorName}`;
       await getRemoteData(URLtemp)
       .then((response) => {
-        data = JSON.parse(response);
+        const data = JSON.parse(response);
         actorId = data.results[0].id;
       });
-      Url+=`&with_cast=${actorId}`;
+      URL+=`&with_cast=${actorId}`;
     }
-
     await getRemoteData(URL)
     .then((response) => {
       const data = JSON.parse(response);
       var i=0;
       while(i<4){
         if(i===3){
-          speechText+=' and ';
+          speechText+=', and ';
         }
         var movieTitle = data.results[i].title;
         speechText += `${movieTitle}`;
@@ -223,13 +224,13 @@ const MovieSuggestIntentHandler = {
         i++;
         if(i===4)speechText+='.';
       }
-      SessionAttributes.data = data;
+      sessionAttributes.data = data;
     })
     .catch(function(error){
       console.log(error);
     });
-    outputSpeech += "Would you like to here more?";
-    SessionAttributes.count = 4;
+    speechText += " Would you like to hear more?";
+    sessionAttributes.count = 4;
     sessionAttributes.lastStatement = speechText;
     return handlerInput.responseBuilder
     .speak(speechText)
@@ -238,7 +239,7 @@ const MovieSuggestIntentHandler = {
     .getResponse();
   },
 };
-
+ 
 const SimilarMoviesHandler = {
   canHandle(handlerInput) {
     return (handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -249,45 +250,51 @@ const SimilarMoviesHandler = {
     var SessionAttributes = handlerInput.attributesManager.getSessionAttributes();
     // console.log(movieName);
     // Building URL for API
+    var URL = 'https://api.themoviedb.org/3';
     var queryURL = URL; // URL for searching similar movies
     queryURL+= `/movie`;
-    // // var queryURL
     URL+=`/search/movie?api_key=${APIKEY}`; // URL for getting movieID
     URL+=`&page=1`;
     URL+=`&language=en-US`;
     URL+=`&query=${movieName}`;
 
-
     var movieId; 
-
+    console.log(URL);
+    console.log('-----');
     await getRemoteData(URL)
       .then((response) => {
         // Building response from API Response
         const data = JSON.parse(response);
         movieId = data.results[0].id;
+    })
+    .catch(function(error){
+      console.log(error);
     });
-
+    
     queryURL+=`/${movieId}/similar?api_key=${APIKEY}&language=en-US`;
-    let speechText = `Here are your movie recommendations similar to ${movieName} genre: `;
+    let speechText = `Here are your movie recommendations similar to ${movieName}: `;
     await getRemoteData(queryURL)
     .then((response) => {
       const data = JSON.parse(response);
       var i=0;
       while(i<4){
         if(i===3){
-          speechText+=' and ';
+          speechText+=', and ';
         }
         var movieTitle = data.results[i].title;
         speechText += `${movieTitle}`;
         if(i<2)speechText+=', ';
-        i++;
         if(i===3)speechText+='.';
+        i++;
       }
       SessionAttributes.data = data;
+    })
+    .catch(function(error){
+      console.log(error);
     });
-    outputSpeech += "Would you like to here more?";
+
+    speechText += " Would you like to hear more?";
     SessionAttributes.count = 4;
-    });
     SessionAttributes.lastStatement = speechText;
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -296,7 +303,22 @@ const SimilarMoviesHandler = {
   },
 };
 
-
+const NoHandler = {
+  canHandle(handlerInput) {
+    const request = handlerInput.requestEnvelope.request;
+    return request.type === 'IntentRequest'
+      && request.intent.name === 'AMAZON.NoIntent';
+  },
+  handle(handlerInput) {
+    var speechOutput = 'Goodbye and have a nice day';
+    return handlerInput.responseBuilder
+      .speak(speechOutput)
+      .withShouldEndSession(true)
+      .getResponse();
+  },
+};
+ 
+ 
 const HelpIntentHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -311,7 +333,7 @@ const HelpIntentHandler = {
       .getResponse();
   },
 };
-
+ 
 const CancelAndStopIntentHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -320,38 +342,38 @@ const CancelAndStopIntentHandler = {
   },
   handle(handlerInput) {
     const speechText = 'Goodbye!';
-
+ 
     return handlerInput.responseBuilder
       .speak(speechText)
       .withShouldEndSession(true)
       .getResponse();
   },
 };
-
+ 
 const SessionEndedRequestHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'SessionEndedRequest';
   },
   handle(handlerInput) {
     console.log(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`);
-
+ 
     return handlerInput.responseBuilder.getResponse();
   },
 };
-
+ 
 const ErrorHandler = {
   canHandle() {
     return true;
   },
   handle(handlerInput, error) {
     console.log(`Error handled: ${error.message}`);
-
+ 
     return handlerInput.responseBuilder
       .speak(`You are in HelpIntent`)
       .getResponse();
   },
 };
-
+ 
 const RepeatHandler = {
   canHandle(handlerInput) {
     const request = handlerInput.requestEnvelope.request;
@@ -367,7 +389,7 @@ const RepeatHandler = {
       .getResponse();
   },
 };
-
+ 
 const getRemoteData = function (url) {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('https') ? require('https') : require('http');
@@ -382,9 +404,9 @@ const getRemoteData = function (url) {
     request.on('error', (err) => reject(err));
   });
 };
-
+ 
 const skillBuilder = Alexa.SkillBuilders.custom();
-
+ 
 exports.handler = skillBuilder
   .addRequestHandlers(
     UpcomingMovieHandler,
@@ -397,7 +419,8 @@ exports.handler = skillBuilder
     SessionEndedRequestHandler,
     RepeatHandler,
     YesHandler,
+    NoHandler,
   )
   .addErrorHandlers(ErrorHandler)
   .lambda();
-
+ 
